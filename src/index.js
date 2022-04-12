@@ -28,9 +28,9 @@ function checkExistsIdParams(request, response, next) {
 
     request.bodyRequest = todoFound;
 
-    return next()
+    return todoFound
   }
-
+  next()
 }
 
 
@@ -172,26 +172,86 @@ app.post('/todos', checksExistsUsernameHeader, (request, response) => {
 
 
 
-app.put('/todos/:id', checksExistsUsernameHeader, checkExistsIdParams, (request, response) => {
+app.put('/todos/:id', checksExistsUsernameHeader, (request, response) => {
+
+
   const { id } = request.params;
   const { title, deadline } = request.body;
 
+  //var todoFound = todosTableDB.find(todo => todo.id === id);
 
-  const objeto = {
-    id: id,
-    title: title,
+  var todoFound = todosTableDB.find((findResult) => {
+    return findResult.id === id
+  })
+
+  todoFound.title = title;
+  todoFound.deadline = deadline;
+
+
+  todoFound = {
+    id: todoFound.id,
+    title: todoFound.title,
+    deadline: todoFound.deadline,
+    created_at: todoFound.created_at,
+    isDone: todoFound.isDone,
+    deadlinePTBR: todoFound.deadlinePTBR
+
   }
 
+  //todosTableDB.push(todoFound);
+
+
+  const objeto = {
+    id: todoFound.id,
+    title: todoFound.title,
+    deadline: todoFound.deadline,
+    created_at: todoFound.created_at,
+    isDone: todoFound.isDone,
+    deadlinePTBR: todoFound.deadlinePTBR
+
+  }
+
+
+
+
+
   return response.status(200).json({
-    id: objeto.id,
-    title: objeto.title,
+    objeto
   });
+
+})
+
+
+app.get("/tables", (request, response) => {
+
+  const users = { usersTableDB }
+  const todos = { todosTableDB }
+
+  const objeto = { usersTableDB, todosTableDB }
+
+
+  response.status(200).json({ objeto });
 
 })
 
 
 
 
+
+app.get("/todos/:todoId", checkExistsIdParams, (request, response) => {
+
+  const { id } = request.params;
+
+  const todoFound = todosTableDB.find(todo => todo.id === id);
+
+
+  objeto = { todoFound }
+
+  response.status(200).json({ todoFound })
+
+
+
+})
 
 
 
