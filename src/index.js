@@ -184,6 +184,18 @@ app.put('/todos/:id', checksExistsUsernameHeader, (request, response) => {
     return findResult.id === id
   })
 
+  var userFound = usersTableDB.find((findResult) => {
+    return findResult.username === todoFound.username
+  })
+
+  userFound.todos.forEach((todo) => {
+    if (todo.id === id) {
+      todo.title = title;
+      todo.deadline = deadline;
+    }
+  })
+
+
   todoFound.title = title;
   todoFound.deadline = deadline;
 
