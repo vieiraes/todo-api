@@ -7,26 +7,46 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const usersDB = [];
-const todosDB = [];
+//tabelas do "banco de dados" 
+const usersTableDB = [];
+const todosTableDB = [];
 
 
 
+function checkExistsIdParams(request, response, next) {
 
-function checksExistsUserAccount(request, response, next) {
-  
-  const { username } = request.headers;
+  const { id } = request.params;
 
-  const userFind = usersDB.find(user => user.username === username);
+  const todoFound = todosTableDB.find(todo => todo.id === id);
 
-  if (!userFind) {
+  if (!todoFound) {
     return response.status(400).json({
-      message: 'user not found'
+      message: 'id not found'
     })
 
-  } else if (userFind) {
+  } else if (todoFound) {
 
-    request.fullRequest = userFind;
+    request.bodyRequest = todoFound;
+
+    return next()
+  }
+
+}
+
+
+function checksExistsUsernameHeader(request, response, next) {
+
+  const { username } = request.headers;
+  const userFound = usersTableDB.find(user => user.username === username);
+
+  if (!userFound) {
+    return response.status(400).json({
+      message: 'username not found'
+    })
+
+  } else if (userFound) {
+
+    request.bodyRequest = userFound;
 
     return next();
   }
@@ -37,9 +57,13 @@ function checksExistsUserAccount(request, response, next) {
 
 
 
+
+
 app.post("/users", (request, response) => {
   //const { user } = request;
   const { name, username } = request.body;
+
+
 
   const objeto = {
     id: uuidv4(),
@@ -48,7 +72,9 @@ app.post("/users", (request, response) => {
     todos: []
   };
 
-  usersDB.push(objeto);
+
+
+  usersTableDB.push(objeto);
 
 
   response.status(200).json({
@@ -61,12 +87,16 @@ app.post("/users", (request, response) => {
 
 });
 
-app.get("/todos", checksExistsUserAccount, (request, response) => {
-  const { fullRequest } = request;
+
+
+
+
+app.get("/todos", checksExistsUsernameHeader, (request, response) => {
+  const { bodyRequest } = request;
 
   const objeto = {
-    name: fullRequest.name,
-    todos: fullRequest.todos
+    name: bodyRequest.name,
+    todos: bodyRequest.todos
   }
 
   response.status(200).json({
@@ -80,21 +110,104 @@ app.get("/todos", checksExistsUserAccount, (request, response) => {
 
 
 
+app.post('/todos', checksExistsUsernameHeader, (request, response) => {
+
+  const { bodyRequest } = request;
+  const { title, deadline } = request.body;
+  const { username } = request.headers;
+
+  //converter data para acrecentar o numerod e dias do deadline
+  var targetDate = new Date();
+  targetDate.setDate(targetDate.getDate() + deadline);
 
 
-app.post('/todos', checksExistsUserAccount, (request, response) => {
+  //montando o  objeto para o  push
+  const objeto = {
+    id: uuidv4(),
+    username: username,
+    title: title,
+    created_at: new Date(),
+    isDone: false,
+    deadline: targetDate,
+  }
+  const deadlinePTBR = objeto.deadline.toLocaleDateString('pt-BR');
+
+
+  //gravando no array do usuario do request
+  bodyRequest.todos.push({
+    id: objeto.id,
+    username: objeto.username,
+    title: objeto.title,
+    created_at: objeto.created_at,
+    isDone: objeto.isDone,
+    deadline: objeto.deadline,
+    deadlinePTBR: deadlinePTBR
+  }
+
+  );
+  //gravando na "tabela" todosDB
+  todosTableDB.push({
+    id: objeto.id,
+    username: objeto.username,
+    title: objeto.title,
+    created_at: objeto.created_at,
+    isDone: objeto.isDone,
+    deadline: objeto.deadline,
+    deadlinePTBR: deadlinePTBR
+  });
+
+
+
+  return response.status(200).json({
+    id: objeto.id,
+    title: objeto.title,
+    created_at: objeto.created_at,
+    deadline: objeto.deadline,
+    deadlinePTBR: deadlinePTBR,
+    isDone: objeto.done
+  })
+
+});
+
+
+
+
+app.put('/todos/:id', checksExistsUsernameHeader, checkExistsIdParams, (request, response) => {
+  const { id } = request.params;
+  const { title, deadline } = request.body;
+
+
+  const objeto = {
+    id: id,
+    title: title,
+  }
+
+  return response.status(200).json({
+    id: objeto.id,
+    title: objeto.title,
+  });
+
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+app.patch('/todos/:id/done', checksExistsUsernameHeader, (request, response) => {
   // Complete aqui
 });
 
-app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
-});
-
-app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
-});
-
-app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
+app.delete('/todos/:id', checksExistsUsernameHeader, (request, response) => {
   // Complete aqui
 });
 

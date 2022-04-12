@@ -1,0 +1,19 @@
+{
+  "editor.fontFamily": "'JetBrains Mono','Droid Sans Mono', 'monospace', monospace",
+  "jshint.packageManager": "yarn",
+  "workbench.colorCustomizations": {
+    "statusBar.background": "#d1ec5e",
+    "statusBar.foreground": "#15202b",
+    "statusBarItem.hoverBackground": "#c4e730",
+    "statusBarItem.remoteBackground": "#d1ec5e",
+    "statusBarItem.remoteForeground": "#15202b",
+    "titleBar.activeBackground": "#d1ec5e",
+    "titleBar.activeForeground": "#15202b",
+    "titleBar.inactiveBackground": "#d1ec5e99",
+    "titleBar.inactiveForeground": "#15202b99",
+    "editorCursor.foreground": "#00ff62",
+    "terminalCursor.foreground": "#00ff62"
+  },
+  "peacock.color": "#d1ec5e",
+  "editor.cursorWidth": 6
+}
