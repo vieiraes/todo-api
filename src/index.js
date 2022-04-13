@@ -13,6 +13,18 @@ const todosTableDB = [];
 
 
 
+function ThrowErrorTreatment(request, response, next) {
+  const { error } = response;
+
+  if (error) {
+    return response.status(400).json({
+      message: error.message
+    })
+  }
+  next();
+}
+
+
 function checkExistsIdParams(request, response, next) {
 
   const { id } = request.params;
@@ -271,6 +283,55 @@ app.get("/todos/:todoId", checkExistsIdParams, (request, response) => {
 
 
 
+app.delete('/todos/:id', checksExistsUsernameHeader, (request, response) => {
+
+  const { bodyRequest } = request;
+  const { id } = request.params;
+  const { username } = request.headers;
+
+
+  const userFound = usersTableDB.find(user => user.username === username);
+  const todoFound = userFound.todos.find(todo => todo.id === id);
+
+  //removendo um elemento do array
+  userFound.todos.splice(userFound.todos.indexOf(todoFound), 1);
+  //removendo uo mesmo elemento da tabela
+  todosTableDB.splice(todosTableDB.indexOf(todoFound), 1);
+
+
+  const objeto = {
+    id: todoFound.id,
+    title: todoFound.title,
+    deadline: todoFound.deadline,
+    created_at: todoFound.created_at,
+    isDone: todoFound.isDone,
+    deadlinePTBR: todoFound.deadlinePTBR
+
+
+  }
+  /*  if (response.status != 200) {
+     const { error } = response;
+     return response.status(400).json({
+       message: error.message
+ 
+     });
+   } */
+
+
+  return response.status(200).json({
+    message: "Task removed", objeto
+  })
+
+
+
+
+});
+
+
+
+
+
+
 
 
 
@@ -279,8 +340,8 @@ app.patch('/todos/:id/done', checksExistsUsernameHeader, (request, response) => 
   // Complete aqui
 });
 
-app.delete('/todos/:id', checksExistsUsernameHeader, (request, response) => {
-  // Complete aqui
-});
+
+
+
 
 module.exports = app;
