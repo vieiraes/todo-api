@@ -13,40 +13,27 @@ const todosTableDB = [];
 
 
 
-function ThrowErrorTreatment(request, response, next) {
-  const { error } = response;
 
-  if (error) {
-    return response.status(400).json({
-      message: error.message
-    })
-  }
-  next();
-}
-
-
-function checkExistsIdParams(request, response, next) {
+function checkIfExistsTodoIdInParams(request, response, next) {
 
   const { id } = request.params;
-
-  const todoFound = todosTableDB.find(todo => todo.id === id);
+  const todoFound = todosTableDB.find(todos => todos.id === id);
 
   if (!todoFound) {
     return response.status(400).json({
       message: 'id not found'
     })
 
-  } else if (todoFound) {
-
-    request.bodyRequest = todoFound;
-
-    return todoFound
   }
-  next()
+
+  request.bodyRequest = todoFound;
+
+
+  return next()
 }
 
 
-function checksExistsUsernameHeader(request, response, next) {
+function checksExistsUsernameInHeader(request, response, next) {
 
   const { username } = request.headers;
   const userFound = usersTableDB.find(user => user.username === username);
@@ -56,12 +43,11 @@ function checksExistsUsernameHeader(request, response, next) {
       message: 'username not found'
     })
 
-  } else if (userFound) {
-
-    request.bodyRequest = userFound;
-
-    return next();
   }
+
+  request.bodyRequest = userFound;
+
+  return next();
 
 
 }
@@ -103,7 +89,7 @@ app.post("/users", (request, response) => {
 
 
 
-app.get("/todos", checksExistsUsernameHeader, (request, response) => {
+app.get("/todos", checksExistsUsernameInHeader, (request, response) => {
   const { bodyRequest } = request;
 
   const objeto = {
@@ -122,7 +108,7 @@ app.get("/todos", checksExistsUsernameHeader, (request, response) => {
 
 
 
-app.post('/todos', checksExistsUsernameHeader, (request, response) => {
+app.post('/todos', checksExistsUsernameInHeader, (request, response) => {
 
   const { bodyRequest } = request;
   const { title, deadline } = request.body;
@@ -184,7 +170,7 @@ app.post('/todos', checksExistsUsernameHeader, (request, response) => {
 
 
 
-app.put('/todos/:id', checksExistsUsernameHeader, (request, response) => {
+app.put('/todos/:id', checksExistsUsernameInHeader, (request, response) => {
 
 
   const { id } = request.params;
@@ -262,7 +248,7 @@ app.get("/tables", (request, response) => {
 
 
 
-app.get("/todos/:todoId", checkExistsIdParams, (request, response) => {
+app.get("/todos/:todoId", checkIfExistsTodoIdInParams, (request, response) => {
 
   const { id } = request.params;
 
@@ -283,7 +269,7 @@ app.get("/todos/:todoId", checkExistsIdParams, (request, response) => {
 
 
 
-app.delete('/todos/:id', checksExistsUsernameHeader, (request, response) => {
+app.delete('/todos/:id', checksExistsUsernameInHeader, checkIfExistsTodoIdInParams, (request, response) => {
 
   const { bodyRequest } = request;
   const { id } = request.params;
@@ -292,39 +278,40 @@ app.delete('/todos/:id', checksExistsUsernameHeader, (request, response) => {
 
   const userFound = usersTableDB.find(user => user.username === username);
   const todoFound = userFound.todos.find(todo => todo.id === id);
-
-  //removendo um elemento do array
-  userFound.todos.splice(userFound.todos.indexOf(todoFound), 1);
-  //removendo uo mesmo elemento da tabela
-  todosTableDB.splice(todosTableDB.indexOf(todoFound), 1);
+  // o "find" acima retuna um booleano?
+  // se for true, ele retorna o objeto, se for false, ele retorna undefined
 
 
-  const objeto = {
-    id: todoFound.id,
-    title: todoFound.title,
-    deadline: todoFound.deadline,
-    created_at: todoFound.created_at,
-    isDone: todoFound.isDone,
-    deadlinePTBR: todoFound.deadlinePTBR
 
 
+  if (todoFound !== undefined) {
+
+    //removendo um elemento do array
+    userFound.todos.splice(userFound.todos.indexOf(todoFound), 1);
+    //removendo uo mesmo elemento da tabela
+    todosTableDB.splice(todosTableDB.indexOf(todoFound), 1);
+
+
+    const objeto = {
+      id: todoFound.id,
+      title: todoFound.title,
+      deadline: todoFound.deadline,
+      created_at: todoFound.created_at,
+      isDone: todoFound.isDone,
+      deadlinePTBR: todoFound.deadlinePTBR
+
+    }
+
+    return response.status(200).json({
+      message: "Task removed", objeto
+    })
+
+
+  } else {
+    return response.status(404).json({
+      message: error.message
+    })
   }
-  /*  if (response.status != 200) {
-     const { error } = response;
-     return response.status(400).json({
-       message: error.message
- 
-     });
-   } */
-
-
-  return response.status(200).json({
-    message: "Task removed", objeto
-  })
-
-
-
-
 });
 
 
@@ -336,7 +323,7 @@ app.delete('/todos/:id', checksExistsUsernameHeader, (request, response) => {
 
 
 
-app.patch('/todos/:id/done', checksExistsUsernameHeader, (request, response) => {
+app.patch('/todos/:id/done', checksExistsUsernameInHeader, (request, response) => {
   // Complete aqui
 });
 
