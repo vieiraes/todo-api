@@ -11,11 +11,12 @@ describe('Users', () => {
         name: 'John Doe',
         username: 'johndoe'
       })
-    expect(201);
+    expect(200);
 
     expect(validate(response.body.id)).toBe(true);
 
     expect(response.body).toMatchObject({
+      id: expect.any(String),
       name: 'John Doe',
       username: 'johndoe',
       todos: []
@@ -38,6 +39,10 @@ describe('Users', () => {
       })
       .expect(400);
 
-    expect(response.body.error).toBeTruthy();
+
+    expect(response.body).toMatchObject({
+      message: 'username already exists'
+    });
+
   });
 });

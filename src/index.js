@@ -13,8 +13,29 @@ const todosTableDB = [];
 
 
 
+// SEÇÃO MIDDLEWARE
 
-function checkIfExistsTodoIdInParams(request, response, next) {
+
+function VerfyIfUsernameAlreadyExixts(request, response, next) {
+  const { username } = request.body;
+  const userFound = usersTableDB.find(user => user.username === username);
+
+  if (userFound) {
+    return response.status(400).json({
+      message: 'username already exists'
+    })
+  }
+  request.userFound = userFound;
+
+
+
+  next()
+
+
+}
+
+
+function CheckIfExistsTodoIdInParams(request, response, next) {
 
   const { id } = request.params;
   const todoFound = todosTableDB.find(todos => todos.id === id);
@@ -33,7 +54,9 @@ function checkIfExistsTodoIdInParams(request, response, next) {
 }
 
 
-function checksExistsUsernameInHeader(request, response, next) {
+
+
+function ChecksExistsUsernameInHeader(request, response, next) {
 
   const { username } = request.headers;
   const userFound = usersTableDB.find(user => user.username === username);
@@ -53,11 +76,37 @@ function checksExistsUsernameInHeader(request, response, next) {
 }
 
 
+function VerifyIfAlreadyDone(request, response, next) {
+
+  const { id } = request.params;
+  const { username } = request.headers
+
+  const userFound = usersTableDB.find(user => user.username === username);
+  const todoFound = userFound.todos.find(todo => todo.id === id);
+
+
+
+  if (todoFound.id === true) {
+    return response.status(400).json({
+      message: 'task already done'
+
+    })
+  }
+  request.bodyRequest = userFound;
+  next()
+
+}
+// SEÇÃO MIDDLEWARE
 
 
 
 
-app.post("/users", (request, response) => {
+
+
+
+
+
+app.post("/users", VerfyIfUsernameAlreadyExixts, (request, response) => {
   //const { user } = request;
   const { name, username } = request.body;
 
@@ -70,9 +119,8 @@ app.post("/users", (request, response) => {
     todos: []
   };
 
-
-
   usersTableDB.push(objeto);
+
 
 
   response.status(200).json({
@@ -89,7 +137,7 @@ app.post("/users", (request, response) => {
 
 
 
-app.get("/todos", checksExistsUsernameInHeader, (request, response) => {
+app.get("/todos", ChecksExistsUsernameInHeader, (request, response) => {
   const { bodyRequest } = request;
 
   const objeto = {
@@ -108,7 +156,7 @@ app.get("/todos", checksExistsUsernameInHeader, (request, response) => {
 
 
 
-app.post('/todos', checksExistsUsernameInHeader, (request, response) => {
+app.post('/todos', ChecksExistsUsernameInHeader, (request, response) => {
 
   const { bodyRequest } = request;
   const { title, deadline } = request.body;
@@ -170,7 +218,10 @@ app.post('/todos', checksExistsUsernameInHeader, (request, response) => {
 
 
 
-app.put('/todos/:id', checksExistsUsernameInHeader, (request, response) => {
+
+
+
+app.put('/todos/:id', ChecksExistsUsernameInHeader, (request, response) => {
 
 
   const { id } = request.params;
@@ -248,7 +299,7 @@ app.get("/tables", (request, response) => {
 
 
 
-app.get("/todos/:todoId", checkIfExistsTodoIdInParams, (request, response) => {
+app.get("/todos/:todoId", CheckIfExistsTodoIdInParams, (request, response) => {
 
   const { id } = request.params;
 
@@ -269,7 +320,7 @@ app.get("/todos/:todoId", checkIfExistsTodoIdInParams, (request, response) => {
 
 
 
-app.delete('/todos/:id', checksExistsUsernameInHeader, checkIfExistsTodoIdInParams, (request, response) => {
+app.delete('/todos/:id', ChecksExistsUsernameInHeader, CheckIfExistsTodoIdInParams, (request, response) => {
 
   const { bodyRequest } = request;
   const { id } = request.params;
@@ -302,7 +353,7 @@ app.delete('/todos/:id', checksExistsUsernameInHeader, checkIfExistsTodoIdInPara
 
     }
 
-    return response.status(200).json({
+    return response.status(202).json({
       message: "Task removed", objeto
     })
 
@@ -322,10 +373,67 @@ app.delete('/todos/:id', checksExistsUsernameInHeader, checkIfExistsTodoIdInPara
 
 
 
+//#TODO: fazer esse endpoint
+app.patch('/todos/:id/done', /* ChecksExistsUsernameInHeader */ /* VerifyIfAlreadyDone */(request, response) => {
 
-app.patch('/todos/:id/done', checksExistsUsernameInHeader, (request, response) => {
-  // Complete aqui
-});
+  const { bodyRequest } = request;
+  const { id } = request.params;
+  const { username } = request.headers;
+
+  const userFound = usersTableDB.find(findResult => findResult.username === username);
+  const todoFound = userFound.todos.find(findResult => findResult.id === id);
+
+
+  userFound.todos.forEach((todo) => {
+    if (todo.id === id) {
+      todo.isDone = true;
+
+    }
+  })
+
+
+
+
+
+  const objetoTodos = {
+    id: todoFound.id,
+    title: todoFound.title,
+    deadline: todoFound.deadline,
+    created_at: todoFound.created_at,
+    isDone: true,
+    deadlinePTBR: todoFound.deadlinePTBR
+  }
+
+  const objetoUser = {
+    id: userFound.id,
+    name: userFound.name,
+    username: userFound.username,
+    todos: objetoTodos
+  }
+
+
+  usersTableDB.todos.isDone = userFound.todos.isDone = true;
+  todosTableDB.isDone = todoFound.isDone = true;
+
+
+
+
+  usersTableDB.todos.isDone = userFound.todos.isDone = true;
+  //todosTableDB.isDone = todoFound.isDone = true;
+
+
+
+
+
+
+  return response.status(200).json({
+    message: "task done", objeto
+  })
+
+}
+
+
+);
 
 
 
